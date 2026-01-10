@@ -68,14 +68,7 @@ struct PairResoBox: View {
                 .padding(.bottom, 16)
             }
         }
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
-                )
-        )
+        .background(Color.black)
     }
     
     private var filteredBoxSlice: BoxSlice? {

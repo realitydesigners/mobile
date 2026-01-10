@@ -16,7 +16,7 @@ struct MainTabView: View {
         // Customize tab bar appearance
         let appearance = UITabBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = UIColor(AppTheme.background1.opacity(0.95))
+        appearance.backgroundColor = UIColor.black
         
         // Normal state
         appearance.stackedLayoutAppearance.normal.iconColor = UIColor(AppTheme.textMuted)
@@ -73,10 +73,8 @@ struct HistoryPlaceholderView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppTheme.background1
+                Color.black
                     .ignoresSafeArea()
-                
-                EtherealBackgroundView()
                 
                 EmptyStateView(
                     icon: "clock",

@@ -15,19 +15,11 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppTheme.background1
+                Color.black
                     .ignoresSafeArea()
                 
-                EtherealBackgroundView()
-                
                 ScrollView(showsIndicators: false) {
-                    LazyVGrid(
-                        columns: [
-                            GridItem(.flexible(), spacing: 16),
-                            GridItem(.flexible(), spacing: 16)
-                        ],
-                        spacing: 16
-                    ) {
+                    VStack(spacing: 16) {
                         ForEach(favorites, id: \.self) { pair in
                             PairResoBox(
                                 pair: pair,

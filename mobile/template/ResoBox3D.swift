@@ -75,7 +75,6 @@ struct SceneKitView: UIViewRepresentable {
             if index == 0 {
                 boxNode.position = SCNVector3Zero
             } else {
-                let prevBox = sortedBoxes[index - 1]
                 let prevScale = pow(1.0 / sqrt(1.5), Float(index - 1))
                 let prevSize = baseSize * prevScale
                 

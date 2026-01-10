@@ -32,7 +32,7 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            AppTheme.background1
+            Color.black
                 .ignoresSafeArea()
             
             // Check subscription status first

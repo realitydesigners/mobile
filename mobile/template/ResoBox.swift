@@ -2,7 +2,7 @@
 //  ResoBox.swift
 //  mobile
 //
-//  2D nested box visualization component
+//  2D nested box visualization - matches web design system exactly
 //
 
 import SwiftUI
@@ -12,8 +12,6 @@ struct ResoBox: View {
     let pair: String?
     let showPriceLines: Bool
     let signal: Signal?
-    
-    @State private var containerSize: CGFloat = 0
     
     init(slice: BoxSlice, pair: String? = nil, showPriceLines: Bool = true, signal: Signal? = nil) {
         self.slice = slice
@@ -29,21 +27,22 @@ struct ResoBox: View {
                 
                 if !slice.boxes.isEmpty {
                     let sortedBoxes = sortBoxesByMagnitude(slice.boxes)
+                    let size = min(geometry.size.width, geometry.size.height)
+                    
                     ResoBoxRecursive(
                         box: sortedBoxes[0],
                         index: 0,
                         prevBox: nil,
-                        containerSize: min(geometry.size.width, geometry.size.height),
+                        containerSize: size,
                         slice: slice,
                         sortedBoxes: sortedBoxes,
                         pair: pair,
                         showPriceLines: showPriceLines,
                         signal: signal
                     )
+                    .frame(width: size, height: size, alignment: .topTrailing)
+                    .clipped()
                 }
-            }
-            .onAppear {
-                containerSize = min(geometry.size.width, geometry.size.height)
             }
         }
         .aspectRatio(1, contentMode: .fit)
@@ -67,26 +66,16 @@ struct ResoBoxRecursive: View {
     let showPriceLines: Bool
     let signal: Signal?
     
-    @State private var positiveColor = Color(hex: "7EB8DA")
-    @State private var negativeColor = Color(hex: "9B8DC4")
+    // Default box colors matching web version exactly
+    private let positiveColor = Color(hex: "24FF66")
+    private let negativeColor = Color(hex: "303238")
+    
+    // Default styles matching web version exactly
+    private let borderRadius: CGFloat = 4
+    private let showBorder = true
     
     private var calculatedSize: CGFloat {
         containerSize * pow(0.86, CGFloat(index))
-    }
-    
-    private var isFirstDifferent: Bool {
-        guard let prevBox = prevBox else { return false }
-        return (box.value > 0 && prevBox.value < 0) || (box.value < 0 && prevBox.value > 0)
-    }
-    
-    private var position: BoxPosition {
-        if prevBox == nil {
-            return .topRight
-        } else if isFirstDifferent {
-            return prevBox!.value > 0 ? .topRight : .bottomRight
-        } else {
-            return box.value < 0 ? .bottomRight : .topRight
-        }
     }
     
     private var boxColor: Color {
@@ -98,39 +87,80 @@ struct ResoBoxRecursive: View {
         return boxMatchesSignal(box, signal: signal, pair: pair)
     }
     
+    // Calculate where to position the NEXT (child) box within THIS box
+    // This matches the web CSS positioning logic exactly:
+    // positionStyle = !prevBox
+    //   ? { top: 0, right: 0 }
+    //   : isFirstDifferent
+    //     ? prevBox.value > 0 ? { top: 0, right: 0 } : { bottom: 0, right: 0 }
+    //     : box.value < 0 ? { bottom: 0, right: 0 } : { top: 0, right: 0 }
+    private func getNextBoxYOffset() -> CGFloat {
+        guard index < sortedBoxes.count - 1 else { return 0 }
+        
+        let nextBox = sortedBoxes[index + 1]
+        let nextSize = containerSize * pow(0.86, CGFloat(index + 1))
+        let currentBox = box  // This is prevBox for the next box
+        
+        // isFirstDifferent for the NEXT box (does next box have different sign than current?)
+        let nextIsFirstDifferent = (nextBox.value > 0 && currentBox.value < 0) ||
+                                   (nextBox.value < 0 && currentBox.value > 0)
+        
+        if nextIsFirstDifferent {
+            // Use currentBox's sign (which is prevBox for the next box)
+            if currentBox.value > 0 {
+                // top: 0, right: 0 → top-right corner
+                return 0
+            } else {
+                // bottom: 0, right: 0 → bottom-right corner
+                return calculatedSize - nextSize
+            }
+        } else {
+            // Use nextBox's sign
+            if nextBox.value < 0 {
+                // bottom: 0, right: 0 → bottom-right corner
+                return calculatedSize - nextSize
+            } else {
+                // top: 0, right: 0 → top-right corner
+                return 0
+            }
+        }
+    }
+    
     var body: some View {
-        ZStack(alignment: position.alignment) {
-            // Box background
-            RoundedRectangle(cornerRadius: 4)
+        ZStack {
+            // Box background layer (pure black)
+            RoundedRectangle(cornerRadius: borderRadius)
                 .fill(Color.black)
-                .frame(width: calculatedSize, height: calculatedSize)
             
-            // Box gradient
-            RoundedRectangle(cornerRadius: 4)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            boxColor.opacity(0.71),
-                            boxColor.opacity(0.0)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: calculatedSize, height: calculatedSize)
+            // Color fill layer (solid color, no gradient for now)
+            RoundedRectangle(cornerRadius: borderRadius)
+                .fill(boxColor)
             
             // Border
-            RoundedRectangle(cornerRadius: 4)
-                .stroke(Color.black, lineWidth: 1)
-                .frame(width: calculatedSize, height: calculatedSize)
+            if showBorder {
+                RoundedRectangle(cornerRadius: borderRadius)
+                    .stroke(Color.black, lineWidth: 1)
+            }
             
             // Price lines
             if showPriceLines {
                 priceLines
+                    .frame(width: calculatedSize, height: calculatedSize)
             }
             
-            // Nested boxes
+            // Nested boxes - positioned at corner using position()
             if index < sortedBoxes.count - 1 {
+                let nextSize = containerSize * pow(0.86, CGFloat(index + 1))
+                let isBottomPosition = getNextBoxYOffset() > 0
+                
+                // Position child at corner:
+                // Top-right: child's top-right at parent's top-right
+                // Bottom-right: child's bottom-right at parent's bottom-right
+                let xPos = calculatedSize - nextSize / 2  // Right side
+                let yPos = isBottomPosition 
+                    ? calculatedSize - nextSize / 2  // Bottom
+                    : nextSize / 2                    // Top
+                
                 ResoBoxRecursive(
                     box: sortedBoxes[index + 1],
                     index: index + 1,
@@ -142,20 +172,33 @@ struct ResoBoxRecursive: View {
                     showPriceLines: showPriceLines,
                     signal: signal
                 )
-                .offset(x: position.xOffset(size: calculatedSize), y: position.yOffset(size: calculatedSize))
+                .position(x: xPos, y: yPos)
             }
         }
+        .frame(width: calculatedSize, height: calculatedSize)
+    }
+    
+    // isFirstDifferent for THIS box (used for price line logic)
+    private var isFirstDifferent: Bool {
+        guard let prevBox = prevBox else { return false }
+        return (box.value > 0 && prevBox.value < 0) || (box.value < 0 && prevBox.value > 0)
     }
     
     @ViewBuilder
     private var priceLines: some View {
+        let isConsecutivePositive = (prevBox?.value ?? 0) > 0 && box.value > 0 && !isFirstDifferent
+        let isConsecutiveNegative = (prevBox?.value ?? 0) < 0 && box.value < 0 && !isFirstDifferent
         let shouldLimitPriceLines = sortedBoxes.count > 18
+        
         let shouldShowTopPrice = matchesSignal || 
             ((!isFirstDifferent || (isFirstDifferent && box.value > 0)) &&
-             (!shouldLimitPriceLines || isFirstDifferent || index == 0))
+             (!shouldLimitPriceLines || isFirstDifferent || index == 0) &&
+             !isConsecutivePositive)
+        
         let shouldShowBottomPrice = matchesSignal ||
             ((!isFirstDifferent || (isFirstDifferent && box.value < 0)) &&
-             (!shouldLimitPriceLines || isFirstDifferent || index == 0))
+             (!shouldLimitPriceLines || isFirstDifferent || index == 0) &&
+             !isConsecutiveNegative)
         
         if shouldShowTopPrice {
             VStack {
@@ -164,7 +207,7 @@ struct ResoBoxRecursive: View {
                     Text(formatPrice(box.high))
                         .font(.system(size: 7, design: .monospaced))
                         .foregroundColor(Color(hex: "808080"))
-                        .offset(x: 40)
+                        .offset(x: 40, y: -14)
                 }
                 Spacer()
             }
@@ -178,7 +221,7 @@ struct ResoBoxRecursive: View {
                     Text(formatPrice(box.low))
                         .font(.system(size: 7, design: .monospaced))
                         .foregroundColor(Color(hex: "808080"))
-                        .offset(x: 40)
+                        .offset(x: 40, y: 14)
                 }
             }
         }
@@ -213,35 +256,5 @@ struct ResoBoxRecursive: View {
         }
         
         return false
-    }
-}
-
-// MARK: - Box Position Helper
-
-enum BoxPosition {
-    case topRight
-    case bottomRight
-    
-    var alignment: Alignment {
-        switch self {
-        case .topRight: return .topTrailing
-        case .bottomRight: return .bottomTrailing
-        }
-    }
-    
-    func xOffset(size: CGFloat) -> CGFloat {
-        switch self {
-        case .topRight, .bottomRight:
-            return size * 0.14 * 0.5
-        }
-    }
-    
-    func yOffset(size: CGFloat) -> CGFloat {
-        switch self {
-        case .topRight:
-            return -size * 0.14 * 0.5
-        case .bottomRight:
-            return size * 0.14 * 0.5
-        }
     }
 }

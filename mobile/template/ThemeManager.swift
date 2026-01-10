@@ -43,9 +43,9 @@ enum AppTheme {
     
     // MARK: - Background Colors (Dark Mode)
     
-    static let void = Color(hex: "05070A")              // True deep black
-    static let background1 = Color(hex: "080B12")       // Primary background
-    static let background2 = Color(hex: "0C1018")       // Elevated surface
+    static let void = Color.black                       // True deep black
+    static let background1 = Color.black                // Primary background
+    static let background2 = Color.black                // Elevated surface
     
     // MARK: - Primary Palette
     
