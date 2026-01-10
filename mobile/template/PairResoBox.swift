@@ -30,15 +30,15 @@ struct PairResoBox: View {
             // Header
             HStack {
                 Text(pair)
-                    .font(.system(size: 16, weight: .medium, design: .monospaced))
+                    .font(.russoOne(size: 16))
                     .foregroundColor(AppTheme.textPrimary)
                 
                 Spacer()
                 
                 if let price = dashboardProvider.getCurrentPrice(for: pair) {
                     Text(formatPrice(price))
-                        .font(.system(size: 12, weight: .light, design: .monospaced))
-                        .foregroundColor(AppTheme.textMuted)
+                        .font(.kodeMono(size: 12))
+                        .foregroundColor(.white)
                 }
             }
             .padding(.horizontal, 16)
@@ -97,7 +97,7 @@ struct PairResoBox: View {
             HStack(spacing: 16) {
                 // Ryver chart placeholder
                 Text("Ryver Chart")
-                    .font(.system(size: 12))
+                    .font(.outfit(size: 12))
                     .foregroundColor(AppTheme.textMuted)
                     .frame(maxWidth: .infinity)
                 
@@ -127,7 +127,7 @@ struct PairResoBox: View {
                 .foregroundColor(AppTheme.textMuted)
             
             Text("No data available")
-                .font(.system(size: 12))
+                .font(.outfit(size: 12))
                 .foregroundColor(AppTheme.textMuted)
         }
         .frame(height: 200)
@@ -337,7 +337,7 @@ struct BoxRangeSlider: View {
                         
                         // Label text
                         Text(label)
-                            .font(.system(size: 9, design: .monospaced))
+                            .font(.kodeMono(size: 9))
                             .foregroundColor(inRange ? Color.white : Color(hex: "606878"))
                     }
                     .position(x: position * trackWidth, y: geometry.size.height / 2)

@@ -205,7 +205,7 @@ struct ResoBoxRecursive: View {
                 HStack {
                     Spacer()
                     Text(formatPrice(box.high))
-                        .font(.system(size: 7, design: .monospaced))
+                        .font(.kodeMono(size: 7))
                         .foregroundColor(Color(hex: "808080"))
                         .offset(x: 40, y: -14)
                 }
@@ -219,7 +219,7 @@ struct ResoBoxRecursive: View {
                 HStack {
                     Spacer()
                     Text(formatPrice(box.low))
-                        .font(.system(size: 7, design: .monospaced))
+                        .font(.kodeMono(size: 7))
                         .foregroundColor(Color(hex: "808080"))
                         .offset(x: 40, y: 14)
                 }

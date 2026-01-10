@@ -61,7 +61,7 @@ struct ContentView: View {
                 .scaleEffect(1.2)
             
             Text("Loading...")
-                .font(.system(size: 14, weight: .light))
+                .font(.outfit(size: 14, weight: .light))
                 .foregroundColor(AppTheme.textMuted)
         }
     }

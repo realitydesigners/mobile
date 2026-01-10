@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>KodeMono-Regular.ttf</string>
+		<string>KodeMono-Medium.ttf</string>
+		<string>KodeMono-SemiBold.ttf</string>
+		<string>KodeMono-Bold.ttf</string>
+		<string>Outfit-VariableFont_wght.ttf</string>
+		<string>RussoOne-Regular.ttf</string>
+	</array>
+</dict>
+</plist>
