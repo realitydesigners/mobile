@@ -15,7 +15,7 @@ class RealtimeService: ObservableObject {
     @Published var isConnected = false
     
     private var cancellables = Set<AnyCancellable>()
-    private let baseURL = "https://boxes.rthmn.com"
+    private let convexURL = AppConfig.convexURL
     private var timer: Timer?
     
     private init() {
@@ -40,15 +40,50 @@ class RealtimeService: ObservableObject {
     }
     
     private func fetchLatestPrices() async {
-        guard let url = URL(string: "\(baseURL)/api/liveprice/latest") else { return }
+        // Call Convex query: liveprice.getLatestPrices
+        guard let url = URL(string: "\(convexURL)/api/query") else { return }
+        
+        // Get all pairs we want prices for - use a reasonable subset for now
+        let allPairs = ["BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "ADAUSD", "DOGEUSD", "EURUSD", "GBPUSD", "USDJPY", "XAUUSD"]
+        
+        let args: [String: Any] = ["pairs": allPairs]
+        let requestBody: [String: Any] = [
+            "path": "liveprice:getLatestPrices",
+            "args": args,
+            "format": "json"
+        ]
+        
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: requestBody) else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = jsonData
         
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let prices = try JSONDecoder().decode([String: PriceResponse].self, from: data)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                guard httpResponse.statusCode == 200 else {
+                    if let responseString = String(data: data, encoding: .utf8) {
+                        print("Convex price query error (status \(httpResponse.statusCode)): \(responseString.prefix(200))")
+                    }
+                    return
+                }
+            }
+            
+            // Debug: print response to see what Convex returns
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("Convex price response: \(responseString.prefix(500))")
+            }
+            
+            // Convex returns: { "value": { "BTCUSD": { "price": ..., "timestamp": ... }, ... } }
+            let convexResponse = try JSONDecoder().decode(ConvexQueryResponse<[String: PriceResponse]>.self, from: data)
             
             await MainActor.run {
                 var updated: [String: PriceData] = [:]
-                for (pair, priceResponse) in prices {
+                for (pair, priceResponse) in convexResponse.value {
                     updated[pair.uppercased()] = PriceData(
                         price: priceResponse.price,
                         timestamp: priceResponse.timestamp,
@@ -58,7 +93,12 @@ class RealtimeService: ObservableObject {
                 self.priceData = updated
             }
         } catch {
-            print("Error fetching prices: \(error)")
+            if let responseString = String(data: (try? await URLSession.shared.data(for: request).0) ?? Data(), encoding: .utf8) {
+                print("Error fetching prices from Convex: \(error)")
+                print("Response was: \(responseString.prefix(500))")
+            } else {
+                print("Error fetching prices from Convex: \(error)")
+            }
         }
     }
     
@@ -67,17 +107,46 @@ class RealtimeService: ObservableObject {
     func fetchBoxSlices(for pairs: [String]) async -> [String: BoxSlice] {
         guard !pairs.isEmpty else { return [:] }
         
-        let pairsString = pairs.map { $0.uppercased() }.joined(separator: ",")
-        guard let url = URL(string: "\(baseURL)/api/boxes/latest?pairs=\(pairsString)") else {
-            return [:]
-        }
+        // Call Convex query: boxes.getLatestBoxes
+        guard let url = URL(string: "\(convexURL)/api/query") else { return [:] }
+        
+        let args: [String: Any] = ["pairs": pairs.map { $0.uppercased() }]
+        let requestBody: [String: Any] = [
+            "path": "boxes:getLatestBoxes",
+            "args": args,
+            "format": "json"
+        ]
+        
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: requestBody) else { return [:] }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = jsonData
         
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let response = try JSONDecoder().decode([String: BoxSliceResponse?].self, from: data)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                guard httpResponse.statusCode == 200 else {
+                    if let responseString = String(data: data, encoding: .utf8) {
+                        print("Convex boxes query error (status \(httpResponse.statusCode)): \(responseString.prefix(200))")
+                    }
+                    return [:]
+                }
+            }
+            
+            // Debug: print response to see what Convex returns
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("Convex boxes response: \(responseString.prefix(500))")
+            }
+            
+            // Convex returns: { "value": { "BTCUSD": { "timestamp": ..., "boxes": [...] }, ... } }
+            let convexResponse = try JSONDecoder().decode(ConvexQueryResponse<[String: BoxSliceResponse?]>.self, from: data)
             
             var result: [String: BoxSlice] = [:]
-            for (pair, boxResponse) in response {
+            for (pair, boxResponse) in convexResponse.value {
                 guard let boxResponse = boxResponse else { continue }
                 let boxes = boxResponse.boxes.map { Box(high: $0.high, low: $0.low, value: $0.value) }
                 result[pair.uppercased()] = BoxSlice(
@@ -87,7 +156,10 @@ class RealtimeService: ObservableObject {
             }
             return result
         } catch {
-            print("Error fetching box slices: \(error)")
+            print("Error fetching box slices from Convex: \(error)")
+            if let responseString = String(data: (try? await URLSession.shared.data(for: request).0) ?? Data(), encoding: .utf8) {
+                print("Response was: \(responseString.prefix(500))")
+            }
             return [:]
         }
     }
@@ -112,6 +184,10 @@ class RealtimeService: ObservableObject {
 }
 
 // MARK: - Response Models
+
+private struct ConvexQueryResponse<T: Codable>: Codable {
+    let value: T
+}
 
 private struct PriceResponse: Codable {
     let price: Double

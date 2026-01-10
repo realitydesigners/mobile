@@ -36,10 +36,10 @@ struct ContentView: View {
                 .ignoresSafeArea()
             
             // Check subscription status first
-            if purchaseManager.isLoading {
+            if purchaseManager.isLoading && !AppConfig.debugBypassPaywall {
                 // Still checking subscription status
                 loadingIndicator
-            } else if !purchaseManager.isSubscribed {
+            } else if !purchaseManager.isSubscribed && !AppConfig.debugBypassPaywall {
                 // Not subscribed - show paywall
                 PaywallView()
             } else if !hasCompletedOnboarding && AppConfig.enableOnboarding {

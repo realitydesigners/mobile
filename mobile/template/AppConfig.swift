@@ -55,6 +55,10 @@ enum AppConfig {
     
     // MARK: - URLs
     
+    /// Convex deployment URL - update with your actual Convex URL
+    /// Format: https://your-deployment.convex.cloud
+    static let convexURL = "https://tame-gopher-165.convex.cloud"
+    
     /// Privacy Policy URL
     static let privacyPolicyURL = URL(string: "https://yourwebsite.com/privacy")!
     
@@ -71,13 +75,13 @@ enum AppConfig {
     // MARK: - Feature Flags
     
     /// Set to true to bypass paywall during development
-    static let debugBypassPaywall = false
+    static let debugBypassPaywall = true
     
     /// Enable onboarding flow (set false to skip)
-    static let enableOnboarding = true
+    static let enableOnboarding = false
     
     /// Enable loading/splash screen
-    static let enableLoadingScreen = true
+    static let enableLoadingScreen = false
     
     // MARK: - Paywall Configuration
     
