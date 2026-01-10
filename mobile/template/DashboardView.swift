@@ -20,14 +20,6 @@ struct DashboardView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Global view mode toggle header
-                    HStack {
-                        Spacer()
-                        ViewModeSelector(viewMode: $dashboardProvider.viewMode)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
                     
                     if favoritesService.favorites.isEmpty && !favoritesService.isLoading {
                         emptyFavoritesView
@@ -73,18 +65,22 @@ struct DashboardView: View {
     private var emptyFavoritesView: some View {
         VStack(spacing: 16) {
             Spacer()
-            Image(systemName: "star.slash")
-                .font(.system(size: 48))
-                .foregroundColor(Color(hex: "606878"))
             
-            Text("No Favorites")
-                .font(.russoOne(size: 20))
-                .foregroundColor(.white)
+            VStack(spacing: 24) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 48))
+                    .foregroundColor(Color(hex: "606878"))
+                
+                Text("No Favorites")
+                    .font(.russoOne(size: 20))
+                    .foregroundColor(.white)
+                
+                Text("Go to the Symbols tab\nto add instruments")
+                    .font(.outfit(size: 14))
+                    .foregroundColor(Color(hex: "606878"))
+                    .multilineTextAlignment(.center)
+            }
             
-            Text("Add instruments from the web app\nto see them here")
-                .font(.outfit(size: 14))
-                .foregroundColor(Color(hex: "606878"))
-                .multilineTextAlignment(.center)
             Spacer()
         }
     }

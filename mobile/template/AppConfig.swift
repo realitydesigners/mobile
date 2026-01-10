@@ -118,12 +118,16 @@ enum AppConfig {
 
 enum TabConfig {
     case home
+    case charts
+    case symbols
     case history
     case settings
     
     var title: String {
         switch self {
         case .home: return "Home"
+        case .charts: return "Charts"
+        case .symbols: return "Symbols"
         case .history: return "History"
         case .settings: return "Settings"
         }
@@ -132,6 +136,8 @@ enum TabConfig {
     var icon: String {
         switch self {
         case .home: return "house"
+        case .charts: return "chart.bar.fill"
+        case .symbols: return "chart.line.uptrend.xyaxis"
         case .history: return "clock"
         case .settings: return "gear"
         }
