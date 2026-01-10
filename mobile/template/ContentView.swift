@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  AppTemplate
 //
-//  Root content view - handles app flow: subscription → onboarding → main app
+//  Root content view - handles app flow: auth → subscription → onboarding → main app
 //
 
 import SwiftUI
@@ -11,6 +11,8 @@ import CoreData
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject var purchaseManager: PurchaseManager
+    @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var favoritesService: FavoritesService
     
     @FetchRequest(
         sortDescriptors: [],
@@ -20,10 +22,8 @@ struct ContentView: View {
     
     @State private var isLoaded = false
     
-    /// Check if user has completed onboarding
     private var hasCompletedOnboarding: Bool {
         guard let profile = userProfiles.first else { return false }
-        // Use value(forKey:) to safely access property that may not exist in Core Data model yet
         if let hasCompleted = profile.value(forKey: "hasCompletedOnboarding") as? Bool {
             return hasCompleted
         }
@@ -35,22 +35,29 @@ struct ContentView: View {
             Color.black
                 .ignoresSafeArea()
             
-            // Check subscription status first
-            if purchaseManager.isLoading && !AppConfig.debugBypassPaywall {
-                // Still checking subscription status
+            // Check auth state first
+            if authManager.isLoading {
+                loadingIndicator
+            } else if !authManager.isAuthenticated {
+                // Not signed in - show sign in
+                SignInView()
+            } else if purchaseManager.isLoading && !AppConfig.debugBypassPaywall {
                 loadingIndicator
             } else if !purchaseManager.isSubscribed && !AppConfig.debugBypassPaywall {
-                // Not subscribed - show paywall
                 PaywallView()
             } else if !hasCompletedOnboarding && AppConfig.enableOnboarding {
-                // Subscribed but no profile - show onboarding
                 OnboardingView()
             } else if !isLoaded && AppConfig.enableLoadingScreen {
-                // Has profile but still loading
                 LoadingView(isLoaded: $isLoaded)
             } else {
-                // All good - show main app
                 MainTabView()
+            }
+        }
+        .onChange(of: authManager.isAuthenticated) { _, isAuthenticated in
+            if isAuthenticated {
+                Task {
+                    await favoritesService.fetchFavorites()
+                }
             }
         }
     }
@@ -71,4 +78,6 @@ struct ContentView: View {
     ContentView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
         .environmentObject(PurchaseManager.shared)
+        .environmentObject(AuthManager.shared)
+        .environmentObject(FavoritesService.shared)
 }
