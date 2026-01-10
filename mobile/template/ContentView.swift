@@ -60,6 +60,14 @@ struct ContentView: View {
                 }
             }
         }
+        .onAppear {
+            // Fetch favorites if already authenticated on app start
+            if authManager.isAuthenticated {
+                Task {
+                    await favoritesService.fetchFavorites()
+                }
+            }
+        }
     }
     
     private var loadingIndicator: some View {

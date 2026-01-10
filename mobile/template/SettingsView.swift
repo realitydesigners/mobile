@@ -7,9 +7,11 @@
 
 import SwiftUI
 import CoreData
+import Auth
 
 struct SettingsView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject var authManager: AuthManager
     
     @FetchRequest(
         sortDescriptors: [],
@@ -19,6 +21,7 @@ struct SettingsView: View {
     
     @State private var showEditProfile = false
     @State private var showDeleteConfirmation = false
+    @State private var showSignOutConfirmation = false
     @State private var showAbout = false
     @State private var showPrivacyPolicy = false
     @State private var showTermsOfService = false
@@ -30,14 +33,12 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppTheme.background1
+                Color.black
                     .ignoresSafeArea()
-                
-                EtherealBackgroundView()
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 28) {
-                        profileSection
+                        accountSection
                         appInfoSection
                         dangerZoneSection
                         
@@ -69,6 +70,73 @@ struct SettingsView: View {
             } message: {
                 Text("This will permanently delete your profile and all data.")
             }
+            .alert("Sign Out", isPresented: $showSignOutConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Sign Out", role: .destructive) {
+                    Task {
+                        await authManager.signOut()
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to sign out?")
+            }
+        }
+    }
+    
+    // MARK: - Account Section
+    
+    private var accountSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Account")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(AppTheme.textMuted)
+                .textCase(.uppercase)
+                .tracking(1)
+            
+            VStack(spacing: 0) {
+                // User email
+                if let email = authManager.user?.email {
+                    HStack(spacing: 12) {
+                        Image(systemName: "envelope")
+                            .font(.system(size: 14))
+                            .foregroundColor(AppTheme.textMuted)
+                            .frame(width: 24)
+                        
+                        Text(email)
+                            .font(.kodeMono(size: 13))
+                            .foregroundColor(AppTheme.textPrimary)
+                        
+                        Spacer()
+                    }
+                    .padding(16)
+                }
+                
+                Divider()
+                    .background(Color.white.opacity(0.1))
+                
+                // Sign out button
+                Button(action: { showSignOutConfirmation = true }) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                            .font(.system(size: 14))
+                            .foregroundColor(.red.opacity(0.8))
+                            .frame(width: 24)
+                        
+                        Text("Sign Out")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.red.opacity(0.8))
+                        
+                        Spacer()
+                    }
+                    .padding(16)
+                }
+            }
+            .background(Color.white.opacity(0.05))
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+            )
         }
     }
     

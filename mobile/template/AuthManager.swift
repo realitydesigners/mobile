@@ -19,9 +19,41 @@ class AuthManager: ObservableObject {
     @Published var user: User?
     @Published var error: String?
     
+    private var authStateTask: Task<Void, Never>?
+    
     private init() {
+        setupAuthStateListener()
         Task {
             await checkSession()
+        }
+    }
+    
+    private func setupAuthStateListener() {
+        authStateTask = Task {
+            for await (event, session) in supabase.auth.authStateChanges {
+                await MainActor.run {
+                    print("Auth state changed: \(event)")
+                    switch event {
+                    case .signedIn:
+                        self.user = session?.user
+                        self.isAuthenticated = true
+                        self.isLoading = false
+                        print("User signed in: \(session?.user.email ?? "unknown")")
+                    case .signedOut:
+                        self.user = nil
+                        self.isAuthenticated = false
+                        self.isLoading = false
+                        print("User signed out")
+                    case .initialSession:
+                        self.user = session?.user
+                        self.isAuthenticated = session != nil
+                        self.isLoading = false
+                        print("Initial session: \(session != nil ? "exists" : "none")")
+                    default:
+                        break
+                    }
+                }
+            }
         }
     }
     
@@ -31,9 +63,11 @@ class AuthManager: ObservableObject {
             let session = try await supabase.auth.session
             self.user = session.user
             self.isAuthenticated = true
+            print("Session check: authenticated as \(session.user.email ?? "unknown")")
         } catch {
             self.user = nil
             self.isAuthenticated = false
+            print("Session check: not authenticated - \(error)")
         }
         isLoading = false
     }
@@ -50,9 +84,8 @@ class AuthManager: ObservableObject {
         } catch {
             self.error = error.localizedDescription
             print("Google sign-in error: \(error)")
+            isLoading = false
         }
-        
-        isLoading = false
     }
     
     func signOut() async {
@@ -66,11 +99,16 @@ class AuthManager: ObservableObject {
     }
     
     func handleURL(_ url: URL) async {
+        print("Handling auth URL: \(url)")
+        isLoading = true
         do {
-            try await supabase.auth.session(from: url)
-            await checkSession()
+            let session = try await supabase.auth.session(from: url)
+            self.user = session.user
+            self.isAuthenticated = true
+            print("Auth URL handled, user: \(session.user.email ?? "unknown")")
         } catch {
             print("Error handling auth URL: \(error)")
         }
+        isLoading = false
     }
 }

@@ -10,6 +10,7 @@ import CoreData
 
 struct HomeView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject var favoritesService: FavoritesService
     
     @FetchRequest(
         sortDescriptors: [],
@@ -24,6 +25,7 @@ struct HomeView: View {
     var body: some View {
         DashboardView()
             .environmentObject(DashboardProvider.shared)
+            .environmentObject(favoritesService)
     }
     
     // MARK: - Header Section
