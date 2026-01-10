@@ -9,6 +9,11 @@ import Foundation
 import Combine
 import SwiftUI
 
+enum ViewMode: String, CaseIterable {
+    case twoD = "2D"
+    case threeD = "3D"
+}
+
 class DashboardProvider: ObservableObject {
     static let shared = DashboardProvider()
     
@@ -16,6 +21,7 @@ class DashboardProvider: ObservableObject {
     @Published var isLoading = false
     @Published var isConnected = false
     @Published var isReady = false
+    @Published var viewMode: ViewMode = .twoD
     
     private let realtimeService = RealtimeService.shared
     private var cancellables = Set<AnyCancellable>()

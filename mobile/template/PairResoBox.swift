@@ -16,14 +16,6 @@ struct PairResoBox: View {
     @EnvironmentObject var dashboardProvider: DashboardProvider
     @State private var startIndex: Int = 0
     @State private var maxBoxCount: Int = 15
-    @State private var viewMode: ViewMode = .default
-    
-    enum ViewMode: String, CaseIterable {
-        case `default` = "default"
-        case ryver = "ryver"
-        case threeD = "3d"
-        case line = "line"
-    }
     
     var body: some View {
         VStack(spacing: 12) {
@@ -53,14 +45,14 @@ struct PairResoBox: View {
                 emptyView
             }
             
-            // Range slider (only in default mode)
-            if viewMode == .default, let totalCount = boxSlice?.boxes.count, totalCount > 0 {
+            // Range slider
+            if let totalCount = boxSlice?.boxes.count, totalCount > 0 {
                 BoxRangeSlider(
                     startIndex: $startIndex,
                     visibleCount: $maxBoxCount,
                     totalCount: totalCount
                 )
-                .frame(height: 52)
+                .frame(height: 68)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 12)
             }
@@ -83,28 +75,13 @@ struct PairResoBox: View {
     
     @ViewBuilder
     private func visualizationView(slice: BoxSlice) -> some View {
-        switch viewMode {
-        case .default:
+        switch dashboardProvider.viewMode {
+        case .twoD:
             ResoBox(slice: slice, pair: pair, showPriceLines: true, signal: signal)
                 .padding(16)
         case .threeD:
             ResoBox3D(slice: slice, pair: pair, signal: signal)
                 .padding(16)
-        case .line:
-            ResoLineChart(slice: slice, pair: pair)
-                .padding(16)
-        case .ryver:
-            HStack(spacing: 16) {
-                // Ryver chart placeholder
-                Text("Ryver Chart")
-                    .font(.outfit(size: 12))
-                    .foregroundColor(AppTheme.textMuted)
-                    .frame(maxWidth: .infinity)
-                
-                ResoBox(slice: slice, pair: pair, showPriceLines: false, signal: signal)
-                    .frame(width: 100, height: 100)
-            }
-            .padding(16)
         }
     }
     
@@ -146,6 +123,55 @@ struct PairResoBox: View {
     }
 }
 
+// MARK: - View Mode Selector (Global)
+
+struct ViewModeSelector: View {
+    @Binding var viewMode: ViewMode
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(ViewMode.allCases, id: \.self) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewMode = mode
+                    }
+                } label: {
+                    ZStack {
+                        if viewMode == mode {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.white.opacity(0.1))
+                        }
+                        
+                        Image(systemName: iconForMode(mode))
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(viewMode == mode ? .white : Color(hex: "606878"))
+                    }
+                    .frame(width: 28, height: 24)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(2)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color(hex: "0A0B0D"))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                )
+        )
+    }
+    
+    private func iconForMode(_ mode: ViewMode) -> String {
+        switch mode {
+        case .twoD:
+            return "square.grid.2x2"
+        case .threeD:
+            return "cube"
+        }
+    }
+}
+
 // MARK: - Box Range Slider (matches web RangeSlider)
 
 struct BoxRangeSlider: View {
@@ -159,7 +185,7 @@ struct BoxRangeSlider: View {
     @State private var initialVisibleCount: Int = 0
     
     private let minVisibleCount = 2
-    private let edgeHitZone: CGFloat = 12
+    private let edgeHitZone: CGFloat = 16
     
     // Time scale labels matching web version
     private let timeScaleLabels = ["1M", "1W", "3D", "1D", "12H", "4H", "1H", "30m", "15m", "5m", "1m", "30s", "1s"]
@@ -308,7 +334,7 @@ struct BoxRangeSlider: View {
                 )
             }
         }
-        .frame(height: 24)
+        .frame(height: 36)
     }
     
     private var labelsView: some View {

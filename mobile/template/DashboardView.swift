@@ -18,23 +18,32 @@ struct DashboardView: View {
                 Color.black
                     .ignoresSafeArea()
                 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
-                        ForEach(favorites, id: \.self) { pair in
-                            PairResoBox(
-                                pair: pair,
-                                boxSlice: dashboardProvider.getBoxSlice(for: pair),
-                                isLoading: isLoading,
-                                signal: nil
-                            )
-                        }
+                VStack(spacing: 0) {
+                    // Global view mode toggle header
+                    HStack {
+                        Spacer()
+                        ViewModeSelector(viewMode: $dashboardProvider.viewMode)
+                        Spacer()
                     }
-                    .padding(16)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 16) {
+                            ForEach(favorites, id: \.self) { pair in
+                                PairResoBox(
+                                    pair: pair,
+                                    boxSlice: dashboardProvider.getBoxSlice(for: pair),
+                                    isLoading: isLoading,
+                                    signal: nil
+                                )
+                            }
+                        }
+                        .padding(16)
+                    }
                 }
             }
-            .navigationTitle("Dashboard")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .navigationBarHidden(true)
             .onAppear {
                 initializeDashboard()
             }
