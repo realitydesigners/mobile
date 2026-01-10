@@ -22,38 +22,8 @@ struct HomeView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Background
-                AppTheme.background1
-                    .ignoresSafeArea()
-                
-                EtherealBackgroundView()
-                
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 32) {
-                        // Header
-                        headerSection
-                            .padding(.top, 20)
-                        
-                        // Welcome card
-                        if let profile = userProfile {
-                            welcomeCard(profile: profile)
-                        }
-                        
-                        // Main content placeholder
-                        mainContentSection
-                        
-                        // Feature cards
-                        featureCardsSection
-                        
-                        Spacer(minLength: 100)
-                    }
-                    .padding(.horizontal, 24)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-        }
+        DashboardView()
+            .environmentObject(DashboardProvider.shared)
     }
     
     // MARK: - Header Section

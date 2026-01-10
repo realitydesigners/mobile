@@ -17,6 +17,7 @@ struct MyAppApp: App {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .environmentObject(purchaseManager)
+                .environmentObject(DashboardProvider.shared)
                 .preferredColorScheme(.dark) // Force dark mode - remove for light mode support
                 .task {
                     await purchaseManager.configure()
