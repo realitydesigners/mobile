@@ -1,6 +1,6 @@
 //
-//  AppTemplateApp.swift
-//  AppTemplate
+//  MyAppApp.swift
+//  MyApp
 //
 //  App entry point - configure services and environment
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct AppTemplateApp: App {
+struct MyAppApp: App {
     let persistenceController = PersistenceController.shared
     @StateObject private var purchaseManager = PurchaseManager.shared
     
