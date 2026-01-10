@@ -54,18 +54,15 @@ struct PairResoBox: View {
             }
             
             // Range slider (only in default mode)
-            if viewMode == .default {
-                RangeSlider(
-                    value: Binding(
-                        get: { Double(startIndex) },
-                        set: { startIndex = Int($0) }
-                    ),
-                    range: 0...Double(max(0, (boxSlice?.boxes.count ?? 0) - maxBoxCount)),
-                    step: 1
+            if viewMode == .default, let totalCount = boxSlice?.boxes.count, totalCount > 0 {
+                BoxRangeSlider(
+                    startIndex: $startIndex,
+                    visibleCount: $maxBoxCount,
+                    totalCount: totalCount
                 )
-                .frame(height: 44)
+                .frame(height: 52)
                 .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+                .padding(.bottom, 12)
             }
         }
         .background(Color.black)
@@ -149,34 +146,208 @@ struct PairResoBox: View {
     }
 }
 
-// MARK: - Range Slider
+// MARK: - Box Range Slider (matches web RangeSlider)
 
-struct RangeSlider: View {
-    @Binding var value: Double
-    let range: ClosedRange<Double>
-    let step: Double
+struct BoxRangeSlider: View {
+    @Binding var startIndex: Int
+    @Binding var visibleCount: Int
+    let totalCount: Int
+    
+    @State private var dragMode: DragMode = .none
+    @State private var dragStartOffset: CGFloat = 0
+    @State private var initialStartIndex: Int = 0
+    @State private var initialVisibleCount: Int = 0
+    
+    private let minVisibleCount = 2
+    private let edgeHitZone: CGFloat = 12
+    
+    // Time scale labels matching web version
+    private let timeScaleLabels = ["1M", "1W", "3D", "1D", "12H", "4H", "1H", "30m", "15m", "5m", "1m", "30s", "1s"]
+    
+    enum DragMode {
+        case none
+        case body
+        case startEdge
+        case endEdge
+    }
     
     var body: some View {
+        VStack(spacing: 2) {
+            // Slider track
+            sliderTrack
+            
+            // Labels below
+            labelsView
+        }
+    }
+    
+    private var sliderTrack: some View {
         GeometryReader { geometry in
+            let trackWidth = geometry.size.width
+            let unitWidth = trackWidth / CGFloat(totalCount)
+            let selectionStart = CGFloat(startIndex) * unitWidth
+            let selectionWidth = CGFloat(visibleCount) * unitWidth
+            
             ZStack(alignment: .leading) {
-                // Track
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.white.opacity(0.1))
-                    .frame(height: 4)
+                // Track background
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color(hex: "070809"))
+                    .frame(height: geometry.size.height)
                 
-                // Thumb
-                Circle()
-                    .fill(AppTheme.pearl)
-                    .frame(width: 20, height: 20)
-                    .offset(x: CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound)) * (geometry.size.width - 20))
-                    .gesture(
-                        DragGesture()
-                            .onChanged { gesture in
-                                let newValue = range.lowerBound + Double(gesture.location.x / geometry.size.width) * (range.upperBound - range.lowerBound)
-                                value = min(max(newValue, range.lowerBound), range.upperBound)
+                // Selection bar
+                ZStack {
+                    // Main selection background
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: "0A0B0D"),
+                                    Color(hex: "070809")
+                                ],
+                                startPoint: .bottom,
+                                endPoint: .top
+                            )
+                        )
+                    
+                    // Inner gradient overlay
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: "1d2025"),
+                                    Color(hex: "16181c"),
+                                    Color(hex: "1d2025")
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .opacity(0.4)
+                    
+                    // Radial highlight
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(
+                            RadialGradient(
+                                colors: [
+                                    Color.white.opacity(0.08),
+                                    Color.clear
+                                ],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: selectionWidth * 0.7
+                            )
+                        )
+                    
+                    // Start edge indicator
+                    HStack {
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(Color.white.opacity(dragMode == .startEdge ? 0.8 : 0.4))
+                            .frame(width: 2)
+                            .shadow(color: dragMode == .startEdge ? .white : .clear, radius: 6)
+                        Spacer()
+                    }
+                    
+                    // End edge indicator
+                    HStack {
+                        Spacer()
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(Color.white.opacity(dragMode == .endEdge ? 0.8 : 0.4))
+                            .frame(width: 2)
+                            .shadow(color: dragMode == .endEdge ? .white : .clear, radius: 6)
+                    }
+                }
+                .frame(width: selectionWidth, height: geometry.size.height)
+                .offset(x: selectionStart)
+                .shadow(color: Color.black.opacity(0.8), radius: 15)
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            if dragMode == .none {
+                                // Determine drag mode based on touch location
+                                let localX = value.startLocation.x - selectionStart
+                                if localX < edgeHitZone {
+                                    dragMode = .startEdge
+                                } else if localX > selectionWidth - edgeHitZone {
+                                    dragMode = .endEdge
+                                } else {
+                                    dragMode = .body
+                                }
+                                dragStartOffset = value.startLocation.x
+                                initialStartIndex = startIndex
+                                initialVisibleCount = visibleCount
                             }
-                    )
+                            
+                            let delta = value.location.x - dragStartOffset
+                            let indexDelta = Int(round(delta / unitWidth))
+                            
+                            switch dragMode {
+                            case .body:
+                                // Move the entire selection
+                                let newStart = clamp(initialStartIndex + indexDelta, min: 0, max: totalCount - visibleCount)
+                                startIndex = newStart
+                                
+                            case .startEdge:
+                                // Resize from start
+                                let newStart = clamp(initialStartIndex + indexDelta, min: 0, max: initialStartIndex + initialVisibleCount - minVisibleCount)
+                                let newCount = initialVisibleCount - (newStart - initialStartIndex)
+                                startIndex = newStart
+                                visibleCount = clamp(newCount, min: minVisibleCount, max: totalCount - newStart)
+                                
+                            case .endEdge:
+                                // Resize from end
+                                let newCount = clamp(initialVisibleCount + indexDelta, min: minVisibleCount, max: totalCount - startIndex)
+                                visibleCount = newCount
+                                
+                            case .none:
+                                break
+                            }
+                        }
+                        .onEnded { _ in
+                            dragMode = .none
+                        }
+                )
             }
         }
+        .frame(height: 24)
+    }
+    
+    private var labelsView: some View {
+        GeometryReader { geometry in
+            let trackWidth = geometry.size.width
+            
+            ZStack(alignment: .leading) {
+                ForEach(Array(timeScaleLabels.enumerated()), id: \.offset) { index, label in
+                    let position = CGFloat(index) / CGFloat(timeScaleLabels.count - 1)
+                    let labelValue = Int(position * CGFloat(totalCount))
+                    let inRange = labelValue >= startIndex && labelValue <= startIndex + visibleCount
+                    
+                    VStack(spacing: 1) {
+                        // Tick mark (dashed line)
+                        Rectangle()
+                            .fill(Color.clear)
+                            .frame(width: 0, height: 8)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(
+                                        inRange ? Color.white.opacity(0.8) : Color.white.opacity(0.3),
+                                        style: StrokeStyle(lineWidth: 1, dash: [2, 2])
+                                    )
+                                    .frame(width: 1)
+                            )
+                        
+                        // Label text
+                        Text(label)
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundColor(inRange ? Color.white : Color(hex: "606878"))
+                    }
+                    .position(x: position * trackWidth, y: geometry.size.height / 2)
+                }
+            }
+        }
+        .frame(height: 24)
+    }
+    
+    private func clamp(_ value: Int, min: Int, max: Int) -> Int {
+        Swift.max(min, Swift.min(max, value))
     }
 }
