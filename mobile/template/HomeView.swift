@@ -12,7 +12,7 @@ struct HomeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \UserProfile.createdAt, ascending: false)],
+        sortDescriptors: [],
         animation: .default
     )
     private var userProfiles: FetchedResults<UserProfile>
@@ -90,7 +90,8 @@ struct HomeView: View {
     private func welcomeCard(profile: UserProfile) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                if let name = profile.name {
+                // Use value(forKey:) to safely access property that may not exist in Core Data model yet
+                if let name = profile.value(forKey: "name") as? String, !name.isEmpty {
                     Text("Hello, \(name)")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(AppTheme.textPrimary)

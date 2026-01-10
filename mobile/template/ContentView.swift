@@ -13,7 +13,7 @@ struct ContentView: View {
     @EnvironmentObject var purchaseManager: PurchaseManager
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \UserProfile.createdAt, ascending: false)],
+        sortDescriptors: [],
         animation: .default
     )
     private var userProfiles: FetchedResults<UserProfile>
@@ -23,7 +23,11 @@ struct ContentView: View {
     /// Check if user has completed onboarding
     private var hasCompletedOnboarding: Bool {
         guard let profile = userProfiles.first else { return false }
-        return profile.hasCompletedOnboarding
+        // Use value(forKey:) to safely access property that may not exist in Core Data model yet
+        if let hasCompleted = profile.value(forKey: "hasCompletedOnboarding") as? Bool {
+            return hasCompleted
+        }
+        return false
     }
     
     var body: some View {

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MapKit
+import UIKit
 
 struct LocationPickerView: View {
     @Environment(\.dismiss) private var dismiss

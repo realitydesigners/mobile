@@ -12,7 +12,7 @@ struct SettingsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \UserProfile.createdAt, ascending: false)],
+        sortDescriptors: [],
         animation: .default
     )
     private var userProfiles: FetchedResults<UserProfile>
@@ -98,17 +98,17 @@ struct SettingsView: View {
                             .frame(width: 50, height: 50)
                             .shadow(color: AppTheme.pearl.opacity(0.2), radius: 15)
                             .overlay(
-                                Text(String(profile.name?.prefix(1) ?? "?").uppercased())
+                                Text(String((profile.value(forKey: "name") as? String)?.prefix(1) ?? "?").uppercased())
                                     .font(.system(size: 20, weight: .medium))
                                     .foregroundColor(AppTheme.void)
                             )
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(profile.name ?? "User")
+                            Text((profile.value(forKey: "name") as? String) ?? "User")
                                 .font(.system(size: 17, weight: .medium))
                                 .foregroundColor(AppTheme.textPrimary)
                             
-                            if let email = profile.email {
+                            if let email = profile.value(forKey: "email") as? String {
                                 Text(email)
                                     .font(.system(size: 14, weight: .light))
                                     .foregroundColor(AppTheme.textSecondary)
@@ -299,16 +299,16 @@ struct EditProfileView: View {
     
     private func loadProfile() {
         guard let profile = profile else { return }
-        name = profile.name ?? ""
-        email = profile.email ?? ""
+        name = (profile.value(forKey: "name") as? String) ?? ""
+        email = (profile.value(forKey: "email") as? String) ?? ""
     }
     
     private func saveProfile() {
         guard let profile = profile else { return }
         
-        profile.name = name.isEmpty ? nil : name
-        profile.email = email.isEmpty ? nil : email
-        profile.updatedAt = Date()
+        profile.setValue(name.isEmpty ? nil : name, forKey: "name")
+        profile.setValue(email.isEmpty ? nil : email, forKey: "email")
+        profile.setValue(Date(), forKey: "updatedAt")
         
         do {
             try viewContext.save()

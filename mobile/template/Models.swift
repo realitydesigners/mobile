@@ -22,6 +22,21 @@ struct Box: Codable, Identifiable, Hashable {
         self.value = value
     }
     
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID()
+        self.high = try container.decode(Double.self, forKey: .high)
+        self.low = try container.decode(Double.self, forKey: .low)
+        self.value = try container.decode(Double.self, forKey: .value)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(high, forKey: .high)
+        try container.encode(low, forKey: .low)
+        try container.encode(value, forKey: .value)
+    }
+    
     enum CodingKeys: String, CodingKey {
         case high, low, value
     }
@@ -46,6 +61,19 @@ struct BoxSlice: Codable, Identifiable, Hashable {
         self.id = UUID()
         self.timestamp = timestamp
         self.boxes = boxes
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID()
+        self.timestamp = try container.decode(String.self, forKey: .timestamp)
+        self.boxes = try container.decode([Box].self, forKey: .boxes)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(timestamp, forKey: .timestamp)
+        try container.encode(boxes, forKey: .boxes)
     }
     
     enum CodingKeys: String, CodingKey {

@@ -211,12 +211,23 @@ struct OnboardingView: View {
     
     private func saveProfile() {
         let newProfile = UserProfile(context: viewContext)
-        newProfile.id = UUID()
-        newProfile.name = name.isEmpty ? nil : name
-        newProfile.email = email.isEmpty ? nil : email
-        newProfile.createdAt = Date()
-        newProfile.updatedAt = Date()
-        newProfile.hasCompletedOnboarding = true
+        
+        // Use setValue to set properties that may not exist in Core Data model yet
+        // IMPORTANT: Add these attributes to UserProfile entity in Core Data model:
+        // - id (UUID, optional)
+        // - name (String, optional)
+        // - email (String, optional)
+        // - createdAt (Date, optional)
+        // - updatedAt (Date, optional)
+        // - hasCompletedOnboarding (Boolean)
+        
+        // Note: id might be auto-generated, so we skip setting it
+        // newProfile.setValue(UUID(), forKey: "id")
+        newProfile.setValue(name.isEmpty ? nil : name, forKey: "name")
+        newProfile.setValue(email.isEmpty ? nil : email, forKey: "email")
+        newProfile.setValue(Date(), forKey: "createdAt")
+        newProfile.setValue(Date(), forKey: "updatedAt")
+        newProfile.setValue(true, forKey: "hasCompletedOnboarding")
         
         do {
             try viewContext.save()

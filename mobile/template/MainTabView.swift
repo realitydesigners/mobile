@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import UIKit
+import CoreData
 
 struct MainTabView: View {
     @State private var selectedTab = 0

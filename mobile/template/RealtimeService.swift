@@ -74,7 +74,7 @@ class RealtimeService: ObservableObject {
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            let response = try JSONDecoder().decode([String: BoxSliceResponse].self, from: data)
+            let response = try JSONDecoder().decode([String: BoxSliceResponse?].self, from: data)
             
             var result: [String: BoxSlice] = [:]
             for (pair, boxResponse) in response {

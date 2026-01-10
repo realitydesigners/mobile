@@ -14,10 +14,24 @@ struct PersistenceController {
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
-        for _ in 0..<10 {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-        }
+        
+        // Create a sample UserProfile for previews
+        // IMPORTANT: UserProfile entity needs these attributes in Core Data model:
+        // - createdAt (Date, optional)
+        // - updatedAt (Date, optional)  
+        // - hasCompletedOnboarding (Boolean)
+        // - name (String, optional)
+        // - email (String, optional)
+        // - id (UUID, optional)
+        // - avatarURL (String, optional)
+        let sampleProfile = UserProfile(context: viewContext)
+        
+        // Set properties using setValue to avoid compile errors if attributes don't exist yet
+        sampleProfile.setValue(Date(), forKey: "createdAt")
+        sampleProfile.setValue(Date(), forKey: "updatedAt")
+        sampleProfile.setValue(true, forKey: "hasCompletedOnboarding")
+        sampleProfile.setValue("Preview User", forKey: "name")
+        
         do {
             try viewContext.save()
         } catch {

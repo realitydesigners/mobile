@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SceneKit
+import UIKit
 
 struct ResoBox3D: View {
     let slice: BoxSlice
@@ -14,8 +15,11 @@ struct ResoBox3D: View {
     let signal: Signal?
     
     var body: some View {
-        SceneKitView(slice: slice, pair: pair, signal: signal)
-            .aspectRatio(1, contentMode: .fit)
+        GeometryReader { geometry in
+            SceneKitView(slice: slice, pair: pair, signal: signal)
+                .frame(width: geometry.size.width, height: geometry.size.width)
+        }
+        .aspectRatio(1, contentMode: .fit)
     }
 }
 
@@ -83,9 +87,9 @@ struct SceneKitView: UIViewRepresentable {
                 let offsetY = (box.value > 0) ? (parentHalfSize - currentHalfSize) : -(parentHalfSize - currentHalfSize)
                 
                 boxNode.position = SCNVector3(
-                    x: offsetX,
-                    y: offsetY,
-                    z: offsetZ
+                    x: Float(offsetX),
+                    y: Float(offsetY),
+                    z: Float(offsetZ)
                 )
             }
             
