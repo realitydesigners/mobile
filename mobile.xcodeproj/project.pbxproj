@@ -17,10 +17,12 @@
 
 /* Begin PBXFileReference section */
 		4D2BEA312F12D4DC008E964A /* mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D2BEB582F130998008E964A /* mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = mobile.xcodeproj; sourceTree = "<group>"; };
+		4D2BEC6D2F130A09008E964A /* mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = mobile.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		4D2BEA872F12E599008E964A /* Exceptions for "mobile" folder in "mobile" target */ = {
+		4D2BEA872F12E599008E964A /* Exceptions for "." folder in "mobile" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -30,12 +32,12 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4D2BEA332F12D4DC008E964A /* mobile */ = {
+		4D2BEA332F12D4DC008E964A /* . */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				4D2BEA872F12E599008E964A /* Exceptions for "mobile" folder in "mobile" target */,
+				4D2BEA872F12E599008E964A /* Exceptions for "." folder in "mobile" target */,
 			);
-			path = mobile;
+			path = .;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -60,7 +62,7 @@
 		4D2BEA282F12D4DC008E964A = {
 			isa = PBXGroup;
 			children = (
-				4D2BEA332F12D4DC008E964A /* mobile */,
+				4D2BEA332F12D4DC008E964A /* . */,
 				4D2BEA9B2F12ED63008E964A /* Frameworks */,
 				4D2BEA322F12D4DC008E964A /* Products */,
 			);
@@ -81,6 +83,16 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		4D2BEB5B2F130998008E964A /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4D2BEC702F130A09008E964A /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -97,7 +109,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4D2BEA332F12D4DC008E964A /* mobile */,
+				4D2BEA332F12D4DC008E964A /* . */,
 			);
 			name = mobile;
 			packageProductDependencies = (
@@ -142,6 +154,16 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4D2BEA322F12D4DC008E964A /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4D2BEC702F130A09008E964A /* Products */;
+					ProjectRef = 4D2BEC6D2F130A09008E964A /* mobile.xcodeproj */;
+				},
+				{
+					ProductGroup = 4D2BEB5B2F130998008E964A /* Products */;
+					ProjectRef = 4D2BEB582F130998008E964A /* mobile.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				4D2BEA302F12D4DC008E964A /* mobile */,
@@ -299,7 +321,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = mobile/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -344,7 +366,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = mobile/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
